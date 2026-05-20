@@ -7,6 +7,10 @@ import { adminOrSelf } from '@/access/adminOrSelf'
 import { checkRole } from '@/access/utilities'
 
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
+import {
+  generateVerificationEmailHTML,
+  generateVerificationEmailSubject,
+} from './verificationEmail'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -25,6 +29,10 @@ export const Users: CollectionConfig = {
   },
   auth: {
     tokenExpiration: 1209600,
+    verify: {
+      generateEmailHTML: generateVerificationEmailHTML,
+      generateEmailSubject: generateVerificationEmailSubject,
+    },
   },
   fields: [
     {

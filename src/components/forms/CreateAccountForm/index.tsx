@@ -6,9 +6,8 @@ import { Message } from '@/components/Message'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/providers/Auth'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import React, { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -21,10 +20,9 @@ type FormData = {
 export const CreateAccountForm: React.FC = () => {
   const searchParams = useSearchParams()
   const allParams = searchParams.toString() ? `?${searchParams.toString()}` : ''
-  const { login } = useAuth()
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<null | string>(null)
+  const [success, setSuccess] = useState<null | string>(null)
 
   const {
     formState: { errors },
@@ -38,37 +36,39 @@ export const CreateAccountForm: React.FC = () => {
 
   const onSubmit = useCallback(
     async (data: FormData) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
-
-      if (!response.ok) {
-        const message = response.statusText || 'There was an error creating the account.'
-        setError(message)
-        return
-      }
-
-      const redirect = searchParams.get('redirect')
-
-      const timer = setTimeout(() => {
-        setLoading(true)
-      }, 1000)
-
       try {
-        await login(data)
-        clearTimeout(timer)
-        if (redirect) router.push(redirect)
-        else router.push(`/account?success=${encodeURIComponent('Account created successfully')}`)
+        setError(null)
+        setSuccess(null)
+        setLoading(true)
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        })
+
+        if (!response.ok) {
+          const result = (await response.json().catch(() => null)) as
+            | { errors?: Array<{ message?: string }> }
+            | null
+          const message =
+            result?.errors?.[0]?.message ||
+            response.statusText ||
+            'There was an error creating the account.'
+          setError(message)
+          return
+        }
+
+        setSuccess('Account created. Check your email and click the verification button to sign in.')
       } catch (_) {
-        clearTimeout(timer)
-        setError('There was an error with the credentials provided. Please try again.')
+        setError('There was an error creating the account. Please try again.')
+      } finally {
+        setLoading(false)
       }
     },
-    [login, router, searchParams],
+    [],
   )
 
   return (
@@ -80,7 +80,7 @@ export const CreateAccountForm: React.FC = () => {
         </p>
       </div>
 
-      <Message error={error} />
+      <Message error={error} success={success} />
 
       <div className="flex flex-col gap-8 mb-8">
         <FormItem>

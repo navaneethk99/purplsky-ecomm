@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import {
   BoldFeature,
   EXPERIMENTAL_TableFeature,
@@ -79,7 +80,27 @@ export default buildConfig({
       ]
     },
   }),
-  //email: nodemailerAdapter(),
+  email: nodemailerAdapter(
+    process.env.SMTP_HOST
+      ? {
+          defaultFromAddress: process.env.SMTP_FROM_EMAIL || 'no-reply@example.com',
+          defaultFromName: process.env.SMTP_FROM_NAME || 'Payload Commerce',
+          skipVerify: process.env.SMTP_SKIP_VERIFY === 'true',
+          transportOptions: {
+            auth:
+              process.env.SMTP_USER && process.env.SMTP_PASS
+                ? {
+                    pass: process.env.SMTP_PASS,
+                    user: process.env.SMTP_USER,
+                  }
+                : undefined,
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
+            secure: process.env.SMTP_SECURE === 'true',
+          },
+        }
+      : undefined,
+  ),
   endpoints: [],
   globals: [Header, Footer],
   plugins,
