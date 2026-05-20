@@ -20,9 +20,9 @@ export const StartShoppingButton: React.FC<Props> = ({ className }) => {
     >
       <Link
         href="/shop"
-        className="relative flex items-center justify-center gap-2 overflow-hidden rounded-full"
+        className="relative  flex items-center justify-center gap-2 overflow-hidden rounded-full"
       >
-        <span className="relative">Start Shopping</span>
+        <span className="relative font-purplsky">Start Shopping</span>
         <ArrowRightIcon className="relative size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
       </Link>
     </Button>

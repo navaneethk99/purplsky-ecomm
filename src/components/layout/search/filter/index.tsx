@@ -4,6 +4,7 @@ import React, { Suspense } from 'react'
 
 import { FilterItemDropdown } from './FilterItemDropdown'
 import { FilterItem } from './FilterItem'
+import { SidebarFilterSkeleton } from '../SidebarFilterSkeleton'
 export type ListItem = PathFilterItem | SortFilterItem
 export type PathFilterItem = { path: string; title: string }
 
@@ -25,7 +26,15 @@ export function FilterList({ list, title }: { list: ListItem[]; title?: string }
           <h3 className="text-xs mb-2 text-neutral-500 dark:text-neutral-400">{title}</h3>
         ) : null}
         <ul className="hidden md:block">
-          <Suspense fallback={null}>
+          <Suspense
+            fallback={
+              title ? (
+                <li className="list-none">
+                  <SidebarFilterSkeleton items={list.length} showTitle={false} title={title} />
+                </li>
+              ) : null
+            }
+          >
             <FilterItemList list={list} />
           </Suspense>
         </ul>
