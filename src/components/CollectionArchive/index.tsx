@@ -3,7 +3,7 @@ import React from 'react'
 
 import type { Product } from '@/payload-types'
 
-/* import { Card } from '../Card' */
+import { ProductGridItem } from '@/components/ProductGridItem'
 
 export type Props = {
   posts: Product[]
@@ -11,23 +11,19 @@ export type Props = {
 
 export const CollectionArchive: React.FC<Props> = (props) => {
   const { posts } = props
+  const visiblePosts = posts?.filter((product) => typeof product === 'object' && product !== null) ?? []
 
   return (
     <div className={cn('container')}>
-      <div>
-        <div className="grid grid-cols-4 sm:grid-cols-8 lg:grid-cols-12 gap-y-4 gap-x-4 lg:gap-y-8 lg:gap-x-8 xl:gap-x-8">
-          {posts?.map((result, index) => {
-            if (typeof result === 'object' && result !== null) {
-              return (
-                <div className="col-span-4" key={index}>
-                  {/* <Card className="h-full" doc={result} relationTo="posts" showCategories /> */}
-                </div>
-              )
-            }
-
-            return null
-          })}
-        </div>
+      <div
+        className="grid gap-6"
+        style={{
+          gridTemplateColumns: `repeat(${Math.max(visiblePosts.length, 1)}, minmax(0, 1fr))`,
+        }}
+      >
+        {visiblePosts.map((product, index) => {
+          return <ProductGridItem key={product.id ?? index} product={product} />
+        })}
       </div>
     </div>
   )
