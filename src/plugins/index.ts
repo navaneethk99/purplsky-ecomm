@@ -1,5 +1,6 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { Plugin } from 'payload'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -26,7 +27,38 @@ const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
   return doc?.slug ? `${url}/${doc.slug}` : url
 }
 
+const r2PublicURL = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL
+const r2Enabled = Boolean(
+  process.env.R2_BUCKET &&
+  process.env.R2_ACCESS_KEY_ID &&
+  process.env.R2_SECRET_ACCESS_KEY &&
+  process.env.R2_ENDPOINT &&
+  r2PublicURL,
+)
+
 export const plugins: Plugin[] = [
+  s3Storage({
+    bucket: process.env.R2_BUCKET || '',
+    collections: {
+      media: {
+        generateFileURL: ({ filename, prefix }) => {
+          const baseURL = (r2PublicURL || '').replace(/\/$/, '')
+          const filePrefix = prefix ? `${prefix.replace(/^\/|\/$/g, '')}/` : ''
+
+          return `${baseURL}/${filePrefix}${filename}`
+        },
+      },
+    },
+    config: {
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+      },
+      endpoint: process.env.R2_ENDPOINT,
+      region: 'auto',
+    },
+    enabled: r2Enabled,
+  }),
   seoPlugin({
     generateTitle,
     generateURL,

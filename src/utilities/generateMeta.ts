@@ -4,6 +4,12 @@ import type { Page, Product } from '../payload-types'
 
 import { mergeOpenGraph } from './mergeOpenGraph'
 
+const getAbsoluteURL = (url: string): string => {
+  if (/^(https?:)?\/\//.test(url)) return url
+
+  return `${process.env.NEXT_PUBLIC_SERVER_URL}${url}`
+}
+
 export const generateMeta = async (args: { doc: Page | Product }): Promise<Metadata> => {
   const { doc } = args || {}
 
@@ -11,7 +17,8 @@ export const generateMeta = async (args: { doc: Page | Product }): Promise<Metad
     typeof doc?.meta?.image === 'object' &&
     doc.meta.image !== null &&
     'url' in doc.meta.image &&
-    `${process.env.NEXT_PUBLIC_SERVER_URL}${doc.meta.image.url}`
+    doc.meta.image.url &&
+    getAbsoluteURL(doc.meta.image.url)
 
   return {
     description: doc?.meta?.description,
