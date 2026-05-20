@@ -60,7 +60,7 @@ export const HighImpactHero: React.FC<HighImpactHeroProps> = ({
           className="relative h-full w-full"
           desktopMedia={media}
           fill
-          imgClassName="object-fill"
+          imgClassName="object-cover"
           mobileMedia={mobileMedia}
           priority
         />

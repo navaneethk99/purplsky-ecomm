@@ -1,5 +1,6 @@
 import { Grid } from '@/components/Grid'
 import { ProductGridItem } from '@/components/ProductGridItem'
+import { fuzzySearchProducts } from '@/utilities/fuzzySearchProducts'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
@@ -18,6 +19,7 @@ type Props = {
 export default async function ShopPage({ searchParams }: Props) {
   const { q: searchValue, sort, category } = await searchParams
   const payload = await getPayload({ config: configPromise })
+  const query = typeof searchValue === 'string' ? searchValue.trim() : ''
 
   const products = await payload.find({
     collection: 'products',
@@ -29,9 +31,10 @@ export default async function ShopPage({ searchParams }: Props) {
       gallery: true,
       categories: true,
       priceInUSD: true,
+      description: true,
     },
     ...(sort ? { sort } : { sort: 'title' }),
-    ...(searchValue || category
+    ...(category
       ? {
           where: {
             and: [
@@ -40,24 +43,6 @@ export default async function ShopPage({ searchParams }: Props) {
                   equals: 'published',
                 },
               },
-              ...(searchValue
-                ? [
-                    {
-                      or: [
-                        {
-                          title: {
-                            like: searchValue,
-                          },
-                        },
-                        {
-                          description: {
-                            like: searchValue,
-                          },
-                        },
-                      ],
-                    },
-                  ]
-                : []),
               ...(category
                 ? [
                     {
@@ -73,26 +58,28 @@ export default async function ShopPage({ searchParams }: Props) {
       : {}),
   })
 
-  const resultsText = products.docs.length > 1 ? 'results' : 'result'
+  const filteredProducts = query ? fuzzySearchProducts(products.docs, query) : products.docs
+
+  const resultsText = filteredProducts.length > 1 ? 'results' : 'result'
 
   return (
     <div>
-      {searchValue ? (
+      {query ? (
         <p className="mb-4">
-          {products.docs?.length === 0
+          {filteredProducts.length === 0
             ? 'There are no products that match '
-            : `Showing ${products.docs.length} ${resultsText} for `}
-          <span className="font-bold">&quot;{searchValue}&quot;</span>
+            : `Showing ${filteredProducts.length} ${resultsText} for `}
+          <span className="font-bold">&quot;{query}&quot;</span>
         </p>
       ) : null}
 
-      {!searchValue && products.docs?.length === 0 && (
+      {!query && filteredProducts.length === 0 && (
         <p className="mb-4">No products found. Please try different filters.</p>
       )}
 
-      {products?.docs.length > 0 ? (
+      {filteredProducts.length > 0 ? (
         <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.docs.map((product) => {
+          {filteredProducts.map((product) => {
             return <ProductGridItem key={product.id} product={product} />
           })}
         </Grid>

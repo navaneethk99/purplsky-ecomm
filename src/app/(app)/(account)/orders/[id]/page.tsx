@@ -15,6 +15,7 @@ import { getPayload } from 'payload'
 import { OrderStatus } from '@/components/OrderStatus'
 import { AddressItem } from '@/components/addresses/AddressItem'
 import { ShippingStatus } from '@/components/ShippingStatus'
+import { DeliveryMap } from '@/components/orders/DeliveryMap'
 
 export const dynamic = 'force-dynamic'
 
@@ -200,11 +201,18 @@ export default async function Order({ params, searchParams }: PageProps) {
         )}
 
         {order.shippingAddress && (
-          <div>
-            <h2 className="font-mono text-primary/50 mb-4 uppercase text-sm">Shipping Address</h2>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:items-start">
+            <div>
+              <h2 className="font-mono text-primary/50 mb-4 uppercase text-sm">Shipping Address</h2>
 
-            {/* @ts-expect-error - some kind of type hell */}
-            <AddressItem address={order.shippingAddress} hideActions />
+              {/* @ts-expect-error - some kind of type hell */}
+              <AddressItem address={order.shippingAddress} hideActions />
+            </div>
+
+            <div>
+              {/*<h2 className="font-mono text-primary/50 mb-4 uppercase text-sm">Delivery Map</h2>*/}
+              <DeliveryMap address={order.shippingAddress} />
+            </div>
           </div>
         )}
       </div>
