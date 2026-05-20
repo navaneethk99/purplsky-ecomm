@@ -67,6 +67,15 @@ export const hero: Field = {
       relationTo: 'media',
       required: true,
     },
+    {
+      name: 'mobileMedia',
+      type: 'upload',
+      admin: {
+        condition: (_, { type } = {}) => ['highImpact', 'mediumImpact'].includes(type),
+        description: 'Optional mobile-specific hero image shown on small screens.',
+      },
+      relationTo: 'media',
+    },
   ],
   label: false,
 }

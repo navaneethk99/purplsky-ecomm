@@ -481,6 +481,10 @@ export interface Page {
         }[]
       | null;
     media?: (number | null) | Media;
+    /**
+     * Optional mobile-specific hero image shown on small screens.
+     */
+    mobileMedia?: (number | null) | Media;
   };
   layout: (
     | CallToActionBlock
@@ -1226,6 +1230,7 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
             };
         media?: T;
+        mobileMedia?: T;
       };
   layout?:
     | T
