@@ -563,7 +563,19 @@ export interface ContentBlock {
  * via the `definition` "MediaBlock".
  */
 export interface MediaBlock {
-  media: number | Media;
+  /**
+   * Use this for a single image.
+   */
+  media?: (number | null) | Media;
+  /**
+   * Add multiple images to render this block as an auto-advancing carousel.
+   */
+  mediaItems?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaBlock';
@@ -1313,6 +1325,12 @@ export interface ContentBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
+  mediaItems?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }

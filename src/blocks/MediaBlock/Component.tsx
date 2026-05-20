@@ -3,9 +3,10 @@ import type { StaticImageData } from 'next/image'
 import { cn } from '@/utilities/cn'
 import React from 'react'
 import { RichText } from '@/components/RichText'
-import type { MediaBlock as MediaBlockProps } from '@/payload-types'
+import type { Media as MediaResource, MediaBlock as MediaBlockProps } from '@/payload-types'
 
 import { Media } from '../../components/Media'
+import { MediaBlockCarousel } from './Carousel.client'
 
 export const MediaBlock: React.FC<
   MediaBlockProps & {
@@ -25,12 +26,38 @@ export const MediaBlock: React.FC<
     enableGutter = true,
     imgClassName,
     media,
+    mediaItems,
     staticImage,
     disableInnerContainer,
   } = props
 
-  let caption
-  if (media && typeof media === 'object') caption = media.caption
+  const carouselImages = (mediaItems ?? [])
+    .map((item) => (typeof item.image === 'object' ? (item.image as MediaResource) : null))
+    .filter((item): item is MediaResource => item !== null)
+
+  if (carouselImages.length > 1) {
+    return (
+      <div
+        className={cn(
+          '',
+          {
+            container: enableGutter,
+          },
+          className,
+        )}
+      >
+        <MediaBlockCarousel
+          captionClassName={captionClassName}
+          disableInnerContainer={disableInnerContainer}
+          images={carouselImages}
+          imgClassName={imgClassName}
+        />
+      </div>
+    )
+  }
+
+  const singleMedia = carouselImages[0] ?? (typeof media === 'object' ? media : null)
+  const caption = singleMedia?.caption
 
   return (
     <div
@@ -44,7 +71,7 @@ export const MediaBlock: React.FC<
     >
       <Media
         imgClassName={cn('border border-border rounded-[0.8rem]', imgClassName)}
-        resource={media}
+        resource={singleMedia ?? media}
         src={staticImage}
       />
       {caption && (
