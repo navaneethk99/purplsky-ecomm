@@ -14,6 +14,7 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { OrderStatus } from '@/components/OrderStatus'
 import { AddressItem } from '@/components/addresses/AddressItem'
+import { ShippingStatus } from '@/components/ShippingStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +81,8 @@ export default async function Order({ params, searchParams }: PageProps) {
         customerEmail: true,
         customer: true,
         status: true,
+        shippingStatus: true,
+        trackingNumber: true,
         createdAt: true,
         updatedAt: true,
         shippingAddress: true,
@@ -155,6 +158,15 @@ export default async function Order({ params, searchParams }: PageProps) {
               <OrderStatus className="text-sm" status={order.status} />
             </div>
           )}
+
+          <div className="grow max-w-1/3">
+            <p className="font-mono uppercase text-primary/50 mb-1 text-sm">Shipping</p>
+            <ShippingStatus
+              className="mt-2"
+              status={order.shippingStatus}
+              trackingNumber={order.trackingNumber}
+            />
+          </div>
         </div>
 
         {order.items && (

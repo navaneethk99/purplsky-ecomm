@@ -2,6 +2,7 @@ import { OrderStatus } from '@/components/OrderStatus'
 import { Price } from '@/components/Price'
 import { Button } from '@/components/ui/button'
 import { Order } from '@/payload-types'
+import { ShippingStatus } from '@/components/ShippingStatus'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import Link from 'next/link'
 
@@ -38,6 +39,12 @@ export const OrderItem: React.FC<Props> = ({ order }) => {
             </>
           )}
         </p>
+
+        <ShippingStatus
+          status={order.shippingStatus}
+          trackingNumber={order.trackingNumber}
+          variant="compact"
+        />
       </div>
 
       <Button variant="outline" asChild className="self-start sm:self-auto">

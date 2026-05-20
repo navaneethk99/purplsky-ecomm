@@ -2,145 +2,127 @@
 
 import { Message } from '@/components/Message'
 import { Button } from '@/components/ui/button'
-import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-import { useRouter } from 'next/navigation'
-import React, { useCallback, FormEvent } from 'react'
-import { useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
-import { Address } from '@/payload-types'
+import Script from 'next/script'
+import React, { FormEvent, useCallback, useMemo, useState } from 'react'
 
 type Props = {
-  customerEmail?: string
-  billingAddress?: Partial<Address>
-  shippingAddress?: Partial<Address>
+  paymentData: Record<string, unknown>
   setProcessingPayment: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export const CheckoutForm: React.FC<Props> = ({
-  customerEmail,
-  billingAddress,
-  setProcessingPayment,
-}) => {
-  const stripe = useStripe()
-  const elements = useElements()
+declare global {
+  interface Window {
+    Cashfree?: (options: { mode: 'production' | 'sandbox' }) => {
+      checkout: (options: {
+        paymentSessionId: string
+        redirectTarget?: '_self' | '_blank' | '_modal' | '_top'
+      }) => Promise<{
+        error?: {
+          message?: string
+        }
+        redirect?: boolean
+      }>
+    }
+  }
+}
+
+const cashfreeMode = (() => {
+  const normalized = (
+    process.env.NEXT_PUBLIC_CASHFREE_MODE || process.env.NEXT_PUBLIC_CASHFREE_ENV
+  )
+    ?.trim()
+    .toLowerCase()
+
+  if (normalized === 'production' || normalized === 'prod' || normalized === 'live') {
+    return 'production' as const
+  }
+
+  return 'sandbox' as const
+})()
+
+export const CheckoutForm: React.FC<Props> = ({ paymentData, setProcessingPayment }) => {
   const [error, setError] = React.useState<null | string>(null)
   const [isLoading, setIsLoading] = React.useState(false)
-  const router = useRouter()
-  const { clearCart } = useCart()
-  const { confirmOrder } = usePayments()
+  const [sdkReady, setSDKReady] = useState(false)
+
+  const paymentSessionId = useMemo(() => {
+    return typeof paymentData.paymentSessionId === 'string' ? paymentData.paymentSessionId : ''
+  }, [paymentData.paymentSessionId])
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
+
+      if (!sdkReady || !window.Cashfree) {
+        setError('Cashfree checkout is still loading. Please try again in a moment.')
+        return
+      }
+
+      if (!paymentSessionId) {
+        setError('Cashfree payment session could not be created.')
+        return
+      }
+
+      setError(null)
       setIsLoading(true)
       setProcessingPayment(true)
 
-      if (stripe && elements) {
-        try {
-          const returnUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/checkout/confirm-order${customerEmail ? `?email=${customerEmail}` : ''}`
+      try {
+        const cashfree = window.Cashfree({
+          mode: cashfreeMode,
+        })
 
-          const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-            confirmParams: {
-              return_url: returnUrl,
-              payment_method_data: {
-                billing_details: {
-                  email: customerEmail,
-                  phone: billingAddress?.phone,
-                  address: {
-                    line1: billingAddress?.addressLine1,
-                    line2: billingAddress?.addressLine2,
-                    city: billingAddress?.city,
-                    state: billingAddress?.state,
-                    postal_code: billingAddress?.postalCode,
-                    country: billingAddress?.country,
-                  },
-                },
-              },
-            },
-            elements,
-            redirect: 'if_required',
-          })
+        const result = await cashfree.checkout({
+          paymentSessionId,
+          redirectTarget: '_self',
+        })
 
-          if (paymentIntent && paymentIntent.status === 'succeeded') {
-            try {
-              const confirmResult = await confirmOrder('stripe', {
-                additionalData: {
-                  paymentIntentID: paymentIntent.id,
-                  ...(customerEmail ? { customerEmail } : {}),
-                },
-              })
-
-              if (
-                confirmResult &&
-                typeof confirmResult === 'object' &&
-                'orderID' in confirmResult &&
-                confirmResult.orderID
-              ) {
-                const accessToken =
-                  'accessToken' in confirmResult ? (confirmResult.accessToken as string) : ''
-                const queryParams = new URLSearchParams()
-
-                if (customerEmail) {
-                  queryParams.set('email', customerEmail)
-                }
-                if (accessToken) {
-                  queryParams.set('accessToken', accessToken)
-                }
-
-                const queryString = queryParams.toString()
-                const redirectUrl = `/orders/${confirmResult.orderID}${queryString ? `?${queryString}` : ''}`
-
-                // Clear the cart after successful payment
-                clearCart()
-
-                // Redirect to order confirmation page
-                router.push(redirectUrl)
-              }
-            } catch (err) {
-              console.log({ err })
-              const msg = err instanceof Error ? err.message : 'Something went wrong.'
-              setError(`Error while confirming order: ${msg}`)
-              setIsLoading(false)
-            }
-          }
-          if (stripeError?.message) {
-            setError(stripeError.message)
-            setIsLoading(false)
-          }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Something went wrong.'
-          setError(`Error while submitting payment: ${msg}`)
+        if (result?.error?.message) {
+          setError(result.error.message)
           setIsLoading(false)
           setProcessingPayment(false)
         }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Something went wrong while opening Cashfree.'
+
+        setError(message)
+        setIsLoading(false)
+        setProcessingPayment(false)
       }
     },
-    [
-      setProcessingPayment,
-      stripe,
-      elements,
-      customerEmail,
-      billingAddress?.phone,
-      billingAddress?.addressLine1,
-      billingAddress?.addressLine2,
-      billingAddress?.city,
-      billingAddress?.state,
-      billingAddress?.postalCode,
-      billingAddress?.country,
-      confirmOrder,
-      clearCart,
-      router,
-    ],
+    [paymentSessionId, sdkReady, setProcessingPayment],
   )
 
   return (
-    <form onSubmit={handleSubmit}>
-      {error && <Message error={error} />}
-      <PaymentElement />
-      <div className="mt-8 flex gap-4">
-        <Button disabled={!stripe || isLoading} type="submit" variant="default">
-          {isLoading ? 'Loading...' : 'Pay now'}
-        </Button>
-      </div>
-    </form>
+    <>
+      <Script
+        onLoad={() => setSDKReady(true)}
+        src="https://sdk.cashfree.com/js/v3/cashfree.js"
+        strategy="afterInteractive"
+      />
+
+      <form onSubmit={handleSubmit}>
+        {error && <Message error={error} />}
+
+        <div className="rounded-lg border border-border/70 bg-card px-5 py-5">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                Payment Partner
+              </p>
+              <h3 className="mt-1 text-lg font-medium text-foreground">Cashfree</h3>
+            </div>
+            <span className="rounded-full border border-border/70 px-3 py-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              INR
+            </span>
+          </div>
+
+          <Button disabled={!sdkReady || isLoading} type="submit" variant="default">
+            {isLoading ? 'Redirecting...' : 'Pay with Cashfree'}
+          </Button>
+        </div>
+      </form>
+    </>
   )
 }

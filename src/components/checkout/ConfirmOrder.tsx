@@ -1,13 +1,17 @@
 'use client'
 
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { Message } from '@/components/Message'
+import { Button } from '@/components/ui/button'
 import { useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 export const ConfirmOrder: React.FC = () => {
   const { confirmOrder } = usePayments()
-  const { cart } = useCart()
+  const { cart, clearCart } = useCart()
+  const [error, setError] = React.useState<null | string>(null)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -15,43 +19,65 @@ export const ConfirmOrder: React.FC = () => {
   const isConfirming = useRef(false)
 
   useEffect(() => {
-    if (!cart || !cart.items || cart.items?.length === 0) {
+    if (!cart || !cart.items || cart.items.length === 0) {
       return
     }
 
-    const paymentIntentID = searchParams.get('payment_intent')
+    const orderID = searchParams.get('order_id')
     const email = searchParams.get('email')
 
-    if (paymentIntentID) {
+    if (orderID) {
       if (!isConfirming.current) {
         isConfirming.current = true
 
-        confirmOrder('stripe', {
+        confirmOrder('cashfree', {
           additionalData: {
-            paymentIntentID,
+            orderID,
+            ...(email ? { customerEmail: email } : {}),
           },
-        }).then((result) => {
-          if (result && typeof result === 'object' && 'orderID' in result && result.orderID) {
-            const accessToken = 'accessToken' in result ? (result.accessToken as string) : ''
-            const queryParams = new URLSearchParams()
-
-            if (email) {
-              queryParams.set('email', email)
-            }
-            if (accessToken) {
-              queryParams.set('accessToken', accessToken)
-            }
-
-            const queryString = queryParams.toString()
-            router.push(`/orders/${result.orderID}${queryString ? `?${queryString}` : ''}`)
-          }
         })
+          .then(async (result) => {
+            if (result && typeof result === 'object' && 'orderID' in result && result.orderID) {
+              const accessToken = 'accessToken' in result ? (result.accessToken as string) : ''
+              const queryParams = new URLSearchParams()
+
+              if (email) {
+                queryParams.set('email', email)
+              }
+              if (accessToken) {
+                queryParams.set('accessToken', accessToken)
+              }
+
+              await clearCart()
+
+              const queryString = queryParams.toString()
+              router.push(`/orders/${result.orderID}${queryString ? `?${queryString}` : ''}`)
+            }
+          })
+          .catch((err) => {
+            const message =
+              err instanceof Error ? err.message : 'Something went wrong while confirming your order.'
+
+            setError(message)
+          })
       }
     } else {
       // If no payment intent ID is found, redirect to the home
       router.push('/')
     }
-  }, [cart, confirmOrder, router, searchParams])
+  }, [cart, clearCart, confirmOrder, router, searchParams])
+
+  if (error) {
+    return (
+      <div className="flex w-full flex-col items-center justify-start gap-4 text-center">
+        <h1 className="text-2xl">We could not confirm your payment</h1>
+        <Message error={error} />
+        <Button asChild variant="outline">
+          <Link href="/checkout">Return to checkout</Link>
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="text-center w-full flex flex-col items-center justify-start gap-4">

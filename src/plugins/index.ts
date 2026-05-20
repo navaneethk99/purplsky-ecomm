@@ -5,8 +5,6 @@ import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
-import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
-
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 import { ProductsCollection } from '@/collections/Products'
@@ -15,6 +13,8 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
+import { cashfreeAdapter } from '@/payments/cashfree'
+import { ecommerceCurrenciesConfig } from '@/utilities/ecommerceCurrencies'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -84,6 +84,7 @@ export const plugins: Plugin[] = [
       isAdmin,
       isDocumentOwner,
     },
+    currencies: ecommerceCurrenciesConfig,
     customers: {
       slug: 'users',
     },
@@ -92,6 +93,44 @@ export const plugins: Plugin[] = [
         ...defaultCollection,
         fields: [
           ...defaultCollection.fields,
+          {
+            name: 'shippingStatus',
+            type: 'select',
+            defaultValue: 'pending',
+            admin: {
+              position: 'sidebar',
+            },
+            label: 'Shipping status',
+            options: [
+              {
+                label: 'Pending',
+                value: 'pending',
+              },
+              {
+                label: 'Packed',
+                value: 'packed',
+              },
+              {
+                label: 'Shipped',
+                value: 'shipped',
+              },
+              {
+                label: 'Delivered',
+                value: 'delivered',
+              },
+            ],
+          },
+          {
+            name: 'trackingNumber',
+            type: 'text',
+            admin: {
+              condition: (_, siblingData) =>
+                siblingData?.shippingStatus === 'shipped' ||
+                siblingData?.shippingStatus === 'delivered',
+              position: 'sidebar',
+            },
+            label: 'Tracking number',
+          },
           {
             name: 'accessToken',
             type: 'text',
@@ -116,13 +155,7 @@ export const plugins: Plugin[] = [
       }),
     },
     payments: {
-      paymentMethods: [
-        stripeAdapter({
-          secretKey: process.env.STRIPE_SECRET_KEY!,
-          publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-          webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET!,
-        }),
-      ],
+      paymentMethods: [cashfreeAdapter()],
     },
     products: {
       productsCollectionOverride: ProductsCollection,

@@ -22,25 +22,7 @@ export const BeforeDashboard: React.FC = () => {
           {' to see the results.'}
         </li>
         <li>
-          {'Head over to '}
-          <a
-            href="https://dashboard.stripe.com/test/apikeys"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Stripe to obtain your API Keys
-          </a>
-          {
-            '. Create a new account if needed, then copy them into your environment variables and restart your server. See the '
-          }
-          <a
-            href="https://github.com/payloadcms/payload/blob/3.x/templates/ecommerce/README.md#stripe"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            README
-          </a>
-          {' for more details.'}
+          {'Configure your Cashfree API credentials, set the checkout mode, and whitelist your storefront domain before testing payments.'}
         </li>
         <li>
           {'Modify your '}

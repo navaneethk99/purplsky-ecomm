@@ -1,11 +1,12 @@
 import { AuthProvider } from '@/providers/Auth'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
-import { stripeAdapterClient } from '@payloadcms/plugin-ecommerce/payments/stripe'
 import React from 'react'
 
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 import { SonnerProvider } from '@/providers/Sonner'
+import { cashfreeAdapterClient } from '@/payments/cashfree/client'
+import { ecommerceCurrenciesConfig } from '@/utilities/ecommerceCurrencies'
 
 export const Providers: React.FC<{
   children: React.ReactNode
@@ -34,10 +35,9 @@ export const Providers: React.FC<{
                 },
               },
             }}
+            currenciesConfig={ecommerceCurrenciesConfig}
             paymentMethods={[
-              stripeAdapterClient({
-                publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-              }),
+              cashfreeAdapterClient(),
             ]}
           >
             {children}

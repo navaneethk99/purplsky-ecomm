@@ -356,12 +356,14 @@ export const seed = async ({
   const pendingTransaction = await payload.create({
     collection: 'transactions',
     data: {
-      currency: 'USD',
+      currency: 'INR',
       customer: customer.id,
-      paymentMethod: 'stripe',
-      stripe: {
-        customerID: 'cus_123',
-        paymentIntentID: 'pi_123',
+      paymentMethod: 'cashfree',
+      cashfree: {
+        cfOrderID: 'cf_test_123',
+        orderID: 'order_test_123',
+        paymentSessionID: 'session_test_123',
+        shippingAddressJSON: JSON.stringify(baseAddressUSData),
       },
       status: 'pending',
       billingAddress: baseAddressUSData,
@@ -371,12 +373,14 @@ export const seed = async ({
   const succeededTransaction = await payload.create({
     collection: 'transactions',
     data: {
-      currency: 'USD',
+      currency: 'INR',
       customer: customer.id,
-      paymentMethod: 'stripe',
-      stripe: {
-        customerID: 'cus_123',
-        paymentIntentID: 'pi_123',
+      paymentMethod: 'cashfree',
+      cashfree: {
+        cfOrderID: 'cf_test_456',
+        orderID: 'order_test_456',
+        paymentSessionID: 'session_test_456',
+        shippingAddressJSON: JSON.stringify(baseAddressUSData),
       },
       status: 'succeeded',
       billingAddress: baseAddressUSData,
