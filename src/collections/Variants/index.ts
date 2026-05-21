@@ -7,7 +7,6 @@ export const VariantsCollection: CollectionOverride = ({ defaultCollection }) =>
     ...defaultCollection?.defaultPopulate,
     onSale: true,
     originalPriceInUSD: true,
-    originalPriceInINR: true,
   },
   fields: [...defaultCollection.fields, ...saleFields],
 })

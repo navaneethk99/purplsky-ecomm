@@ -51,7 +51,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     enableVariants: true,
     gallery: true,
     onSale: true,
-    originalPriceInINR: true,
     originalPriceInUSD: true,
     priceInINR: true,
     priceInUSD: true,
