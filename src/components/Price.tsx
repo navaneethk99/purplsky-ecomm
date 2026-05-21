@@ -1,5 +1,6 @@
 'use client'
 import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
+import clsx from 'clsx'
 import React, { useMemo } from 'react'
 
 import { INR } from '@/utilities/ecommerceCurrencies'
@@ -25,6 +26,15 @@ type PriceRange = {
 }
 
 type Props = BaseProps & (PriceFixed | PriceRange)
+
+type PriceGroupProps = {
+  amount: number
+  originalAmount?: number | null
+  className?: string
+  containerClassName?: string
+  currencyCode?: string
+  originalClassName?: string
+}
 
 export const Price = ({
   amount,
@@ -73,4 +83,29 @@ export const Price = ({
   }
 
   return null
+}
+
+export const PriceGroup = ({
+  amount,
+  className,
+  containerClassName,
+  currencyCode,
+  originalAmount,
+  originalClassName,
+}: PriceGroupProps) => {
+  const showOriginalPrice = typeof originalAmount === 'number' && originalAmount > amount
+
+  return (
+    <span className={clsx('inline-flex items-center gap-2', containerClassName)}>
+      <Price amount={amount} as="span" className={className} currencyCode={currencyCode} />
+      {showOriginalPrice ? (
+        <Price
+          amount={originalAmount}
+          as="span"
+          className={clsx('text-muted-foreground line-through', originalClassName)}
+          currencyCode={currencyCode}
+        />
+      ) : null}
+    </span>
+  )
 }

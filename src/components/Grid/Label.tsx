@@ -1,15 +1,16 @@
 import clsx from 'clsx'
 import React from 'react'
 
-import { Price } from '@/components/Price'
+import { PriceGroup } from '@/components/Price'
 
 type Props = {
   amount: number
+  originalAmount?: number | null
   position?: 'bottom' | 'center'
   title: string
 }
 
-export const Label: React.FC<Props> = ({ amount, position = 'bottom', title }) => {
+export const Label: React.FC<Props> = ({ amount, originalAmount, position = 'bottom', title }) => {
   return (
     <div
       className={clsx('absolute bottom-0 left-0 flex w-full px-4 pb-4 @container/label', {
@@ -21,10 +22,12 @@ export const Label: React.FC<Props> = ({ amount, position = 'bottom', title }) =
           {title}
         </h3>
 
-        <Price
+        <PriceGroup
           amount={amount}
-          className="flex-none rounded-full bg-blue-600 p-2 text-white"
-          currencyCodeClassName="hidden @[275px]/label:inline"
+          className="rounded-full bg-blue-600 p-2 text-white"
+          containerClassName="flex-none flex-col items-end gap-1"
+          originalAmount={originalAmount}
+          originalClassName="rounded-full bg-white/80 px-2 py-1 text-[11px] text-black"
         />
       </div>
     </div>

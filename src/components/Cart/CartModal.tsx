@@ -1,6 +1,6 @@
 'use client'
 
-import { Price } from '@/components/Price'
+import { Price, PriceGroup } from '@/components/Price'
 import {
   Sheet,
   SheetContent,
@@ -21,6 +21,7 @@ import { EditItemQuantityButton } from './EditItemQuantityButton'
 import { OpenCartButton } from './OpenCart'
 import { Button } from '@/components/ui/button'
 import { Product, Variant } from '@/payload-types'
+import { getPriceDisplay } from '@/utilities/pricing'
 
 export function CartModal() {
   const { cart } = useCart()
@@ -78,12 +79,12 @@ export function CartModal() {
                       : undefined
 
                   let image = firstGalleryImage || metaImage
-                  let price = product.priceInUSD
+                  let priceSource: Product | Variant = product
 
                   const isVariant = Boolean(variant) && typeof variant === 'object'
 
                   if (isVariant) {
-                    price = variant?.priceInUSD
+                    priceSource = variant
 
                     const imageVariant = product.gallery?.find(
                       (item: NonNullable<Product['gallery']>[number]) => {
@@ -108,6 +109,8 @@ export function CartModal() {
                       image = imageVariant.image
                     }
                   }
+
+                  const { currentPrice, originalPrice } = getPriceDisplay(priceSource)
 
                   return (
                     <li className="flex w-full flex-col" key={i}>
@@ -146,10 +149,13 @@ export function CartModal() {
                           </div>
                         </Link>
                         <div className="flex h-16 flex-col justify-between">
-                          {typeof price === 'number' && (
-                            <Price
-                              amount={price}
-                              className="flex justify-end space-y-2 text-right text-sm"
+                          {typeof currentPrice === 'number' && (
+                            <PriceGroup
+                              amount={currentPrice}
+                              className="text-right text-sm"
+                              containerClassName="flex flex-col items-end gap-1"
+                              originalAmount={originalPrice}
+                              originalClassName="text-xs"
                             />
                           )}
                           <div className="ml-auto flex h-9 flex-row items-center rounded-lg border">

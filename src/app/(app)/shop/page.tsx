@@ -25,13 +25,23 @@ export default async function ShopPage({ searchParams }: Props) {
     collection: 'products',
     draft: false,
     overrideAccess: false,
+    populate: {
+      variants: {
+        onSale: true,
+        originalPriceInUSD: true,
+        priceInUSD: true,
+      },
+    },
     select: {
-      title: true,
-      slug: true,
-      gallery: true,
       categories: true,
-      priceInUSD: true,
       description: true,
+      gallery: true,
+      onSale: true,
+      originalPriceInUSD: true,
+      priceInUSD: true,
+      slug: true,
+      title: true,
+      variants: true,
     },
     ...(sort ? { sort } : { sort: 'title' }),
     ...(category

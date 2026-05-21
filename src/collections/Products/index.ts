@@ -1,6 +1,7 @@
 import { CallToAction } from '@/blocks/CallToAction/config'
 import { Content } from '@/blocks/Content/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
+import { saleFields } from '@/collections/shared/saleFields'
 import { slugField } from 'payload'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
@@ -24,7 +25,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ...defaultCollection,
   admin: {
     ...defaultCollection?.admin,
-    defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
+    defaultColumns: ['title', 'onSale', 'enableVariants', '_status', 'variants.variants'],
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({
@@ -49,6 +50,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variants: true,
     enableVariants: true,
     gallery: true,
+    onSale: true,
+    originalPriceInINR: true,
+    originalPriceInUSD: true,
+    priceInINR: true,
     priceInUSD: true,
     inventory: true,
     meta: true,
@@ -143,6 +148,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         {
           fields: [
             ...defaultCollection.fields,
+            ...saleFields,
             {
               name: 'relatedProducts',
               type: 'relationship',

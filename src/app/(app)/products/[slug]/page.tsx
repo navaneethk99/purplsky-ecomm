@@ -13,6 +13,7 @@ import React, { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { ChevronLeftIcon } from 'lucide-react'
 import { Metadata } from 'next'
+import { getDefaultPriceSource, getPriceDisplay, getValidVariants } from '@/utilities/pricing'
 
 type Args = {
   params: Promise<{
@@ -84,12 +85,14 @@ export default async function ProductPage({ params }: Args) {
   let price = product.priceInUSD
 
   if (product.enableVariants && product?.variants?.docs?.length) {
-    price = product?.variants?.docs?.reduce((acc, variant) => {
-      if (typeof variant === 'object' && variant?.priceInUSD && acc && variant?.priceInUSD > acc) {
-        return variant.priceInUSD
-      }
-      return acc
-    }, price)
+    price = getValidVariants(product).reduce<number | null>((highestPrice, variant) => {
+      const variantPrice = getPriceDisplay(variant).currentPrice
+
+      if (typeof variantPrice !== 'number') return highestPrice
+      if (typeof highestPrice !== 'number' || variantPrice > highestPrice) return variantPrice
+
+      return highestPrice
+    }, price ?? null)
   }
 
   const productJsonLd = {
@@ -161,22 +164,29 @@ function RelatedProducts({ products }: { products: Product[] }) {
     <div className="py-8">
       <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {products.map((product) => (
-          <li
-            className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-            key={product.id}
-          >
-            <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
-              <GridTileImage
-                label={{
-                  amount: product.priceInUSD!,
-                  title: product.title,
-                }}
-                media={product.meta?.image as Media}
-              />
-            </Link>
-          </li>
-        ))}
+        {products.map((product) => {
+          const pricing = getPriceDisplay(getDefaultPriceSource(product))
+
+          if (pricing.currentPrice == null) return null
+
+          return (
+            <li
+              className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
+              key={product.id}
+            >
+              <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
+                <GridTileImage
+                  label={{
+                    amount: pricing.currentPrice,
+                    originalAmount: pricing.originalPrice,
+                    title: product.title,
+                  }}
+                  media={product.meta?.image as Media}
+                />
+              </Link>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )
@@ -206,10 +216,14 @@ const queryProductBySlug = async ({ slug }: { slug: string }) => {
     },
     populate: {
       variants: {
-        title: true,
-        priceInUSD: true,
         inventory: true,
+        onSale: true,
         options: true,
+        originalPriceInINR: true,
+        originalPriceInUSD: true,
+        title: true,
+        priceInINR: true,
+        priceInUSD: true,
       },
     },
   })

@@ -2,7 +2,7 @@
 
 import { Media } from '@/components/Media'
 import { Message } from '@/components/Message'
-import { Price } from '@/components/Price'
+import { Price, PriceGroup } from '@/components/Price'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +21,7 @@ import { AddressItem } from '@/components/addresses/AddressItem'
 import { FormItem } from '@/components/forms/FormItem'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { getPriceDisplay } from '@/utilities/pricing'
 
 export const CheckoutPage: React.FC = () => {
   const { user } = useAuth()
@@ -346,12 +347,12 @@ export const CheckoutPage: React.FC = () => {
               if (!quantity) return null
 
               let image = gallery?.[0]?.image || meta?.image
-              let price = product?.priceInUSD
+              let priceSource: Product | Variant = product
 
               const isVariant = Boolean(variant) && typeof variant === 'object'
 
               if (isVariant) {
-                price = variant?.priceInUSD
+                priceSource = variant
 
                 const imageVariant = product.gallery?.find((item: NonNullable<Product['gallery']>[number]) => {
                   if (!item.variantOption) return false
@@ -372,6 +373,8 @@ export const CheckoutPage: React.FC = () => {
                   image = imageVariant.image
                 }
               }
+
+              const { currentPrice, originalPrice } = getPriceDisplay(priceSource)
 
               return (
                 <div className="flex items-start gap-4" key={index}>
@@ -406,7 +409,14 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {typeof price === 'number' && <Price amount={price} />}
+                    {typeof currentPrice === 'number' && (
+                      <PriceGroup
+                        amount={currentPrice}
+                        containerClassName="flex flex-col items-end gap-1"
+                        originalAmount={originalPrice}
+                        originalClassName="text-sm"
+                      />
+                    )}
                   </div>
                 </div>
               )

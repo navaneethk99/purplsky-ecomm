@@ -7,30 +7,18 @@ import Link from 'next/link'
 import React from 'react'
 import clsx from 'clsx'
 import { Media } from '@/components/Media'
-import { Price } from '@/components/Price'
+import { PriceGroup } from '@/components/Price'
+import { getDefaultPriceSource, getDiscountPercentage, getPriceDisplay } from '@/utilities/pricing'
 
 type Props = {
   product: Partial<Product>
 }
 
 export const ProductGridItem: React.FC<Props> = ({ product }) => {
-  const { gallery, priceInUSD, title } = product
-
-  let price = priceInUSD
-
-  const variants = product.variants?.docs
-
-  if (variants && variants.length > 0) {
-    const variant = variants[0]
-    if (
-      variant &&
-      typeof variant === 'object' &&
-      variant?.priceInUSD &&
-      typeof variant.priceInUSD === 'number'
-    ) {
-      price = variant.priceInUSD
-    }
-  }
+  const { gallery, title } = product
+  const priceSource = getDefaultPriceSource(product)
+  const { currentPrice, originalPrice } = getPriceDisplay(priceSource, 'USD')
+  const discountPercentage = getDiscountPercentage(priceSource, 'USD')
 
   const images =
     gallery?.flatMap((item) => (item.image && typeof item.image !== 'string' ? [item.image] : [])) || []
@@ -91,6 +79,12 @@ export const ProductGridItem: React.FC<Props> = ({ product }) => {
         )}
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/16 to-transparent" />
+
+        {discountPercentage ? (
+          <div className="absolute left-3 top-3 z-20 rounded-full bg-red-600 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm">
+            {discountPercentage}% off
+          </div>
+        ) : null}
 
         {hasMultipleImages && (
           <>
@@ -153,8 +147,15 @@ export const ProductGridItem: React.FC<Props> = ({ product }) => {
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-4 border-t border-border/60 pt-3">
-          {typeof price === 'number' ? (
-            <Price amount={price} className="text-sm font-medium text-foreground" />
+          {typeof currentPrice === 'number' ? (
+            <PriceGroup
+              amount={currentPrice}
+              className="text-sm font-medium text-foreground"
+              containerClassName="flex flex-wrap items-center gap-2"
+              currencyCode="USD"
+              originalAmount={originalPrice}
+              originalClassName="text-xs"
+            />
           ) : (
             <span className="text-sm text-muted-foreground">Price on request</span>
           )}

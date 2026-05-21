@@ -16,6 +16,7 @@ import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { cashfreeAdapter } from '@/payments/cashfree'
 import { ecommerceCurrenciesConfig } from '@/utilities/ecommerceCurrencies'
+import { VariantsCollection } from '@/collections/Variants'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -191,6 +192,9 @@ export const plugins: Plugin[] = [
     },
     products: {
       productsCollectionOverride: ProductsCollection,
+      variants: {
+        variantsCollectionOverride: VariantsCollection,
+      },
     },
   }),
 ]

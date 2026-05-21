@@ -305,6 +305,8 @@ export interface Product {
   priceInUSD?: number | null;
   priceInINREnabled?: boolean | null;
   priceInINR?: number | null;
+  onSale?: boolean | null;
+  originalPriceInUSD?: number | null;
   relatedProducts?: (number | Product)[] | null;
   meta?: {
     title?: string | null;
@@ -913,6 +915,8 @@ export interface Variant {
   priceInUSD?: number | null;
   priceInINREnabled?: boolean | null;
   priceInINR?: number | null;
+  onSale?: boolean | null;
+  originalPriceInUSD?: number | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1605,6 +1609,8 @@ export interface VariantsSelect<T extends boolean = true> {
   priceInUSD?: T;
   priceInINREnabled?: T;
   priceInINR?: T;
+  onSale?: T;
+  originalPriceInUSD?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -1664,6 +1670,8 @@ export interface ProductsSelect<T extends boolean = true> {
   priceInUSD?: T;
   priceInINREnabled?: T;
   priceInINR?: T;
+  onSale?: T;
+  originalPriceInUSD?: T;
   relatedProducts?: T;
   meta?:
     | T
