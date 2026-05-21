@@ -9,6 +9,7 @@ import { MobileMenu } from './MobileMenu'
 import type { Header } from 'src/payload-types'
 
 import { LogoIcon } from '@/components/icons/logo'
+import { HeaderSearch } from '@/components/Search/HeaderSearch'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/utilities/cn'
 
@@ -55,6 +56,7 @@ export function HeaderClient({ header }: Props) {
           </div>
 
           <div className="flex justify-end md:w-1/3 gap-4">
+            <HeaderSearch />
             <Suspense fallback={<OpenCartButton />}>
               <Cart />
             </Suspense>
